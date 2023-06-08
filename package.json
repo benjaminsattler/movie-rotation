@@ -1,0 +1,16 @@
+{
+  "name": "what-should-i-watch-today",
+  "version": "1.0.0",
+  "description": "Gives you a random movie to watch tonight",
+  "main": "index.js",
+  "private": "true",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^5.3.0",
+    "tsparticles-confetti": "^2.10.1"
+  }
+}

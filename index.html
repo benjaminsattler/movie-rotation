@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" class="h-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>What should I watch tonight?</title>
+    <link href="node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            cursor: default;
+        }
+
+        #result {
+            border: 0 transparent solid;
+            border-right-color: var(--bs-body-color);
+            border-right-style: solid;
+            cursor: text;
+        }
+
+        .with-caret {
+            padding-right: .2em;
+        }
+
+        #result.caret-on {
+            border-right-width: 1px;
+            border-left-width: 1px;
+        }
+
+        #result.caret-off {
+            border-right-width: 0;
+            border-left-width;
+        }
+
+        .task-done::before {
+            content: "✅";
+            display: 'block';
+        }
+
+        .shadow-pulse {
+            box-shadow: 0 0 1rem #FFC107FF;
+            animation: 2s  ease-in-out infinite glow
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 .1rem #FFC107FF;
+            }
+            50% {
+                box-shadow: 0 0 1rem #FFC107FF;
+            }
+            100% {
+                box-shadow: 0 0 .1rem #FFC107FF;
+            }
+        }
+    </style>
+</head>
+<body class="container-fluid text-center h-100 d-flex flex-column align-items-center">
+    <h3 class="mt-5 mb-3 pt-4">What movie should I watch tonight?</h3>
+
+    <p id="moviecounter">...loading...</p>
+    <button type="button" id="trigger" disabled="disabled" class="btn btn-primary py-2 px-3">Ask the oracle!</button>
+    <div id="resultWrapper" class="d-block my-5 invisible">
+        <h1 id="result" tabindex="0" class="shadow-pulse user-select-all d-inline-block bg-light text-dark rounded px-3 py-2">&nbsp;</h1>
+    </div>
+    <div class="d-flex gap-2">
+        <a data-url="https://www.disneyplus.com/movies/%s" id="disneyplus" target="_blank" class="disabled btn btn-outline-warning d-inline-block text-nowrap py-2 px-3">
+            Find on <img class="d-inline" width="75" height="46" src="https://static-assets.bamgrid.com/product/disneyplus/images/logo.1a56f51c764022ee769c91d894d44326.svg">
+        </a>
+        <button type="button" id="clipboard" disabled="disabled" data-clipboard="" class="btn btn-outline-warning py-2 px-3">Copy to clipboard</button>
+    </div>
+    <script>
+        window.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            const clipboardEl = document.querySelector('#clipboard');
+            const disneyPlusEl = document.querySelector('#disneyplus');
+            const resultEl = document.querySelector('#result');
+            const triggerEl = document.querySelector('#trigger');
+            const movieCounterEl = document.querySelector('#moviecounter');
+            document.querySelector('#trigger').addEventListener('click', function () {
+                const newPick = pick();
+                document.querySelector('#resultWrapper').classList.remove('invisible');
+                typingAnimation(newPick, resultEl);
+                disneyPlusEl.href = disneyPlusEl.dataset['url'].replace('%s', transformToDisneyPlusUrl(newPick));
+
+                clipboardEl.dataset['clipboard'] = newPick;
+                // document.querySelector('#result').classList.add('with-caret');
+                triggerEl.innerText = "Another one!";
+                clipboardEl.removeAttribute('disabled');
+                disneyPlusEl.classList.remove('disabled');
+                clipboardEl.classList.remove('task-done');
+
+                function randomInRange(min, max) {
+                    return Math.random() * (max - min) + min;
+                }
+
+                confetti({
+                    angle: randomInRange(55, 125),
+                    spread: randomInRange(50, 70),
+                    particleCount: randomInRange(50, 100),
+                    origin: { y: 0.6 },
+                });
+            });
+            clipboardEl.addEventListener('click', async function() {
+                try {
+                    await navigator.clipboard.writeText(this.dataset['clipboard']);
+                    this.classList.add('task-done');
+                } catch (e) {
+                    this.innerText = "Please copy manually!";
+                    resultEl.focus();
+                    window.getSelection().selectAllChildren(resultEl);
+                }
+            });
+            try {
+                await loadMovies('data/movies.txt');
+                movieCounterEl.innerText = count() + ' movies in rotation';
+                triggerEl.removeAttribute('disabled');
+                triggerEl.click();
+            } catch (e) {
+                disableWithError(e, movieCounterEl, triggerEl);
+            }
+        }
+    </script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script src="node_modules/@popperjs/core/dist/umd/popper.js"></script>
+    <script src="node_modules/tsparticles-confetti/tsparticles.confetti.bundle.min.js"></script>
+    <script src="js/wsiwt.js"></script>
+</body>
+</html>
